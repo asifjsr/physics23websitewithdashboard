@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Physics 23",
+  "description": "A premium university class/batch management platform with student dashboard, study tracker, and AI study planner.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

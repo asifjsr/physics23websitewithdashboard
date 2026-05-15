@@ -1,0 +1,148 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Student information and settings",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "department": { "type": "string" },
+        "batch": { "type": "string" },
+        "createdAt": { "type": "string", "description": "Server timestamp" }
+      },
+      "required": ["name", "email", "role", "createdAt"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Academic task or to-do item",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "due": { "type": "string" },
+        "priority": { "type": "string", "enum": ["High", "Medium", "Low"] },
+        "done": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "done", "createdAt"]
+    },
+    "Note": {
+      "title": "Note",
+      "description": "Course note or finding",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "subject": { "type": "string" },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "content", "subject", "createdAt"]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "Academic course information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "credit": { "type": "number" },
+        "teacher": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "code", "createdAt"]
+    },
+    "RoutineItem": {
+      "title": "Routine Item",
+      "description": "Weekly schedule entry",
+      "type": "object",
+      "properties": {
+        "day": { "type": "string" },
+        "subject": { "type": "string" },
+        "time": { "type": "string" },
+        "room": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["day", "subject", "time", "createdAt"]
+    },
+    "StudyProgress": {
+      "title": "Study Progress",
+      "description": "Tracking syllabus completion by subject",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "chapters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "done": { "type": "boolean" }
+            }
+          }
+        },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "chapters", "createdAt"]
+    },
+    "Person": {
+      "title": "Person",
+      "description": "Information about a batchmate or faculty member",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "position": { "type": "string" },
+        "discipline": { "type": "string" },
+        "bio": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "facebookUrl": { "type": "string" },
+        "linkedinUrl": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["studentId", "name", "role", "discipline"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Top-level user profile"
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "User specific tasks"
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": "Note",
+      "description": "User course notes"
+    },
+    "/users/{userId}/subjects/{subjectId}": {
+      "schema": "Subject",
+      "description": "User enrolled subjects"
+    },
+    "/users/{userId}/routines/{routineId}": {
+      "schema": "RoutineItem",
+      "description": "User weekly routine schedule"
+    },
+    "/users/{userId}/studyProgress/{subjectId}": {
+      "schema": "StudyProgress",
+      "description": "User detailed study tracker"
+    },
+    "/users/{userId}/backupRecords/{recordId}": {
+      "schema": "object",
+      "description": "Backup counter records"
+    },
+    "/users/{userId}/calendarEvents/{eventId}": {
+      "schema": "object",
+      "description": "User personal calendar events"
+    },
+    "/people/{personId}": {
+      "schema": "Person",
+      "description": "Official batch members directory"
+    }
+  }
+}
