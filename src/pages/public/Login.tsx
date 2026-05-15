@@ -51,6 +51,17 @@ export default function Login() {
     setLoading(true);
     setError(null);
     try {
+      // 1. Get settings first
+      const settingsRef = doc(db, 'settings', 'app');
+      let settingsSnap = await getDoc(settingsRef);
+      let approvalRequired = false;
+      
+      if (!settingsSnap.exists()) {
+        await setDoc(settingsRef, { loginApprovalRequired: false });
+      } else {
+        approvalRequired = settingsSnap.data()?.loginApprovalRequired || false;
+      }
+
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
@@ -64,6 +75,7 @@ export default function Login() {
           email: user.email,
           photoURL: user.photoURL,
           role: 'student',
+          status: approvalRequired ? 'pending' : 'approved',
           createdAt: now,
           lastLoginAt: now
         }, { merge: true });
@@ -88,6 +100,17 @@ export default function Login() {
     setError(null);
 
     try {
+      // 1. Get settings first
+      const settingsRef = doc(db, 'settings', 'app');
+      let settingsSnap = await getDoc(settingsRef);
+      let approvalRequired = false;
+      
+      if (!settingsSnap.exists()) {
+        await setDoc(settingsRef, { loginApprovalRequired: false });
+      } else {
+        approvalRequired = settingsSnap.data()?.loginApprovalRequired || false;
+      }
+
       if (isLogin) {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
@@ -111,6 +134,7 @@ export default function Login() {
           email,
           photoURL: null,
           role: 'student',
+          status: approvalRequired ? 'pending' : 'approved',
           createdAt: now,
           lastLoginAt: now
         }, { merge: true });

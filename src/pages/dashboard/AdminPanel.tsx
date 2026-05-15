@@ -24,13 +24,14 @@ import {
   Edit2, 
   Plus, 
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Settings
 } from 'lucide-react';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 export default function AdminPanel() {
   const { userData } = useAuth();
-  const [activeTab, setActiveTab] = useState<'users' | 'events' | 'notices' | 'batchmates' | 'people'>('events');
+  const [activeTab, setActiveTab] = useState<'users' | 'events' | 'notices' | 'batchmates' | 'people' | 'settings'>('events');
   
   if (!userData || userData.role !== 'admin') {
     return (
@@ -63,6 +64,7 @@ export default function AdminPanel() {
           { id: 'people', label: 'People Directory', icon: <Users size={16} /> },
           { id: 'batchmates', label: 'Legacy Directory', icon: <Users size={16} /> },
           { id: 'users', label: 'Student List', icon: <ShieldCheck size={16} /> },
+          { id: 'settings', label: 'App Settings', icon: <Settings size={16} /> },
         ].map(tab => (
           <button
             key={tab.id}
@@ -84,8 +86,56 @@ export default function AdminPanel() {
         {activeTab === 'users' && <AdminUserList />}
         {activeTab === 'batchmates' && <AdminBatchmates />}
         {activeTab === 'people' && <AdminPeopleManagement />}
+        {activeTab === 'settings' && <AdminSettings />}
       </div>
     </div>
+  );
+}
+
+function AdminSettings() {
+  const { appSettings } = useAuth();
+  const [approvalRequired, setApprovalRequired] = useState(appSettings?.loginApprovalRequired || false);
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    if (appSettings) setApprovalRequired(appSettings.loginApprovalRequired);
+  }, [appSettings]);
+
+  const handleToggle = async () => {
+    const newVal = !approvalRequired;
+    setApprovalRequired(newVal);
+    setUpdating(true);
+    try {
+      await setDoc(doc(db, 'settings', 'app'), { loginApprovalRequired: newVal }, { merge: true });
+      alert(`Login approval requirement set to: ${newVal ? 'ON' : 'OFF'}`);
+    } catch (error: any) {
+      console.error("Error updating settings:", error);
+      alert("Failed to update settings.");
+      setApprovalRequired(!newVal); // revert
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  return (
+    <GlassCard className="border-none bg-white/[0.03]">
+      <h3 className="text-xl font-bold mb-6">Application Configuration</h3>
+      <div className="p-6 rounded-2xl bg-slate-900 border border-white/5 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-bold text-white mb-1">Require admin approval for login</h4>
+            <p className="text-sm text-slate-500">When enabled, new users will be set to 'pending' and must be approved by an admin.</p>
+          </div>
+          <button 
+            onClick={handleToggle}
+            disabled={updating}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${approvalRequired ? 'bg-indigo-600' : 'bg-slate-700'}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${approvalRequired ? 'translate-x-6' : 'translate-x-1'}`} />
+          </button>
+        </div>
+      </div>
+    </GlassCard>
   );
 }
 
@@ -334,6 +384,7 @@ function AdminUserList() {
                  <th className="py-4 font-bold">Name</th>
                  <th className="py-4 font-bold">Email</th>
                  <th className="py-4 font-bold">Role</th>
+                 <th className="py-4 font-bold">Status</th>
                  <th className="py-4 font-bold">Joined</th>
                </tr>
              </thead>
@@ -347,7 +398,8 @@ function AdminUserList() {
                        value={u.role || 'student'}
                        onChange={async (e) => {
                          await updateDoc(doc(db, 'users', u.id), { role: e.target.value });
-                         window.location.reload(); // Quick refresh to show change
+                         alert("Role updated.");
+                         window.location.reload(); 
                        }}
                        className={`px-3 py-1 rounded-full text-[10px] bg-slate-900 border border-white/10 text-white font-black uppercase appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500`}
                      >
@@ -356,6 +408,23 @@ function AdminUserList() {
                        <option value="admin">Admin</option>
                      </select>
                    </td>
+                   <td className="py-4">
+                      <select 
+                        value={u.status || 'approved'}
+                        onChange={async (e) => {
+                          await updateDoc(doc(db, 'users', u.id), { status: e.target.value });
+                          alert("Status updated.");
+                          window.location.reload();
+                        }}
+                        className={`px-3 py-1 rounded-full text-[10px] bg-slate-900 border border-white/10 ${
+                          u.status === 'pending' ? 'text-amber-500' : u.status === 'rejected' ? 'text-rose-500' : 'text-emerald-500'
+                        } font-black uppercase appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500`}
+                      >
+                        <option value="approved">Approved</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </td>
                    <td className="py-4 text-xs text-slate-500">{u.createdAt?.toDate().toLocaleDateString() || 'N/A'}</td>
                  </tr>
                ))}

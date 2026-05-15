@@ -9,11 +9,22 @@
         "email": { "type": "string", "format": "email" },
         "photoURL": { "type": "string" },
         "role": { "type": "string", "enum": ["student", "admin"] },
+        "status": { "type": "string", "enum": ["approved", "pending", "rejected"] },
         "department": { "type": "string" },
         "batch": { "type": "string" },
-        "createdAt": { "type": "string", "description": "Server timestamp" }
+        "createdAt": { "type": "string", "description": "Server timestamp" },
+        "lastLoginAt": { "type": "string" }
       },
-      "required": ["name", "email", "role", "createdAt"]
+      "required": ["name", "email", "role", "status", "createdAt"]
+    },
+    "AppSettings": {
+      "title": "App Settings",
+      "description": "Global application configuration",
+      "type": "object",
+      "properties": {
+        "loginApprovalRequired": { "type": "boolean" }
+      },
+      "required": ["loginApprovalRequired"]
     },
     "Task": {
       "title": "Task",
@@ -108,6 +119,10 @@
     }
   },
   "firestore": {
+    "/settings/app": {
+      "schema": "AppSettings",
+      "description": "Global app configuration settings"
+    },
     "/users/{userId}": {
       "schema": "User",
       "description": "Top-level user profile"

@@ -31,8 +31,17 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function getAppSettings() {
+      return get(/databases/$(database)/documents/settings/app).data;
+    }
+
     match /system/{docId} {
       allow read: if true;
+    }
+
+    match /settings/app {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // User Profile Rules
@@ -40,10 +49,17 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isOwner(userId) && 
                       request.resource.data.role == 'student' &&
-                      request.resource.data.keys().hasAll(['name', 'email', 'role', 'createdAt']);
+                      (
+                        getAppSettings().loginApprovalRequired == true 
+                        ? request.resource.data.status == 'pending' 
+                        : request.resource.data.status == 'approved'
+                      ) &&
+                      request.resource.data.keys().hasAll(['name', 'email', 'role', 'status', 'createdAt']);
       allow update: if isOwner(userId) && 
                       request.resource.data.role == resource.data.role &&
-                      request.resource.data.email == resource.data.email;
+                      request.resource.data.email == resource.data.email &&
+                      request.resource.data.status == resource.data.status; // Users cannot change their own status or role
+      allow update: if isAdmin(); // Admin can change anything (role, status)
 
       // Subcollections under users
       match /tasks/{taskId} {
